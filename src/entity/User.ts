@@ -1,4 +1,6 @@
-import {Entity, Column, PrimaryGeneratedColumn} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, OneToMany} from "typeorm";
+import {Project} from "./Project"; 
+
 
 @Entity()
 export class User {
@@ -11,5 +13,8 @@ export class User {
 
     @Column()
     lastName!: string;
+
+    @OneToMany(type => Project, project => project.user,{cascade:true}) projects!: Project[];  
+
 
 }

@@ -2,12 +2,13 @@ import * as express from "express";
 import {Request, Response} from "express";
 import {createConnection} from "typeorm";
 import {User} from "./entity/User";
-
+import {Project} from "./entity/Project";
+import * as redis from 'redis'
 
 // create typeorm connection
 createConnection().then(connection => {
     const userRepository = connection.getRepository(User);
-
+    const projectRepository = connection.getRepository(Project);
     // create and setup express app
     const app = express();
     app.use(express.json());
@@ -20,13 +21,22 @@ createConnection().then(connection => {
     });
 
     app.get("/users/:id", async function(req: Request, res: Response) {
-        const results = await userRepository.findOne(req.params.id);
+        const results = await userRepository.findOne(req.params.id, {relations: ['projects']});
         return res.send(results);
     });
 
     app.post("/users", async function(req: Request, res: Response) {
         const user = await userRepository.create(req.body);
+        //const project = await projectRepository.create(req.body.projects);
         const results = await userRepository.save(user);
+        return res.send(results);
+    });
+
+    //create project
+    app.post("/projects", async function(req: Request, res: Response) {
+        const project = await projectRepository.create(req.body);
+
+        const results = await userRepository.save(project);
         return res.send(results);
     });
 
