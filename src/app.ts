@@ -21,29 +21,39 @@ createConnection().then(connection => {
     });
 
     app.get("/users/:id", async function(req: Request, res: Response) {
+        const client = redis.createClient();
+
+        client.on('error', (err) => console.log('Redis Client Error', err));
+      
+        await client.connect();
+      
         const results = await userRepository.findOne(req.params.id, {relations: ['projects']});
         return res.send(results);
     });
 
     app.post("/users", async function(req: Request, res: Response) {
         let users = [];
-        let singleObj = {
-            "firstName": "",
-            "lastName": "",
-            "std": 0,
-            "projects": [] as any[]
-        }
+       
 
-        let proj = {
-            "name" : ""
-        }
-
-        for (let i=0; i <= 10; i++) {
+        for (let i=0; i <= 150; i++) {
+            let singleObj = {
+                "firstName": "",
+                "lastName": "",
+                "std": 0,
+                "projects": [] as any[]
+            }
+    
+            let proj = {
+                "name" : ""
+            }
             singleObj.firstName = "first" + i;
             singleObj.lastName = "last" + i;
             singleObj.std = i;
             proj.name = "proj" + i;
-            singleObj.projects.push(proj);
+            for (let j = 0; j <= 5; j++) {
+                singleObj.projects.push(proj);
+            }
+            
             users.push(singleObj);
         }
 
