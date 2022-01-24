@@ -26,10 +26,31 @@ createConnection().then(connection => {
     });
 
     app.post("/users", async function(req: Request, res: Response) {
-        const user = await userRepository.create(req.body);
+        let users = [];
+        let singleObj = {
+            "firstName": "",
+            "lastName": "",
+            "std": 0,
+            "projects": [] as any[]
+        }
+
+        let proj = {
+            "name" : ""
+        }
+
+        for (let i=0; i <= 10; i++) {
+            singleObj.firstName = "first" + i;
+            singleObj.lastName = "last" + i;
+            singleObj.std = i;
+            proj.name = "proj" + i;
+            singleObj.projects.push(proj);
+            users.push(singleObj);
+        }
+
+        const userdataset = await userRepository.create(users);
         //const project = await projectRepository.create(req.body.projects);
-        const results = await userRepository.save(user);
-        return res.send(results);
+        const results = await userRepository.save(userdataset);
+        return res.send(results); 
     });
 
 
