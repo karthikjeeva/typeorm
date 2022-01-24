@@ -14,6 +14,10 @@ export class User {
     @Column()
     lastName!: string;
 
+    @Column()
+    std!: number;
+
+
     @OneToMany(type => Project, project => project.user,{cascade:true}) projects!: Project[];  
 
 

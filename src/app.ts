@@ -32,13 +32,6 @@ createConnection().then(connection => {
         return res.send(results);
     });
 
-    //create project
-    app.post("/projects", async function(req: Request, res: Response) {
-        const project = await projectRepository.create(req.body);
-
-        const results = await userRepository.save(project);
-        return res.send(results);
-    });
 
     app.put("/users/:id", async function(req: Request, res: Response) {
         const user = await userRepository.findOne(req.params.id);
