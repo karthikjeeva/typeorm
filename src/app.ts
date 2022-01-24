@@ -20,7 +20,11 @@ createConnection().then(connection => {
         res.json(users);
     });
 
-   
+   async function setCache(client:any , id:string) {
+    const user = await userRepository.findOne(id, {relations: ['projects']});
+    await client.setEx('users',3600, JSON.stringify(user));
+    return user;
+   }
 
     app.get("/users/:id", async function(req: Request, res: Response) {
         try {
@@ -29,15 +33,19 @@ createConnection().then(connection => {
             client.on('error', (err) => console.log('Redis Client Error', err));
         
             await client.connect();
-            let alreadyCached = await  client.get('users')
-            if ( alreadyCached) {
-                let cachedUserData = JSON.parse(alreadyCached);
-                return res.send(cachedUserData);
+            let alreadyCachedData:any = await client.get('users');
+            
+            if ( alreadyCachedData ) {
+                alreadyCachedData = JSON.parse(alreadyCachedData);
+                if (alreadyCachedData.id != req.params.id) {
+                   return res.send(await setCache(client, req.params.id));
+                }
+                return res.send(alreadyCachedData);
             } else {
-                const results = await userRepository.findOne(req.params.id, {relations: ['projects']});
-                await client.setEx('users',3600, JSON.stringify(results));
-                return res.send(results);
+                return res.send(await setCache(client, req.params.id));
             }
+
+           
           
         } catch(err) {
             console.log("error connecting  to redis " + err);
