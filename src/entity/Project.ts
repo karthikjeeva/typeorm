@@ -10,6 +10,6 @@ export class Project {
     @Column()
     name!: string;
 
-    @ManyToOne(type => User, user => user.projects) user!: User; 
+    @ManyToOne(type => User, user => user.projects,  {onDelete: "CASCADE"}) user!: User; 
 
 }
