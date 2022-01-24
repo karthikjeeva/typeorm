@@ -3,7 +3,7 @@ import {Request, Response} from "express";
 import {createConnection} from "typeorm";
 import {User} from "./entity/User";
 import {Project} from "./entity/Project";
-import * as redis from 'redis'
+import * as redis from 'redis';
 
 // create typeorm connection
 createConnection().then(connection => {
@@ -20,15 +20,30 @@ createConnection().then(connection => {
         res.json(users);
     });
 
-    app.get("/users/:id", async function(req: Request, res: Response) {
-        const client = redis.createClient();
+   
 
-        client.on('error', (err) => console.log('Redis Client Error', err));
+    app.get("/users/:id", async function(req: Request, res: Response) {
+        try {
+            const client = redis.createClient();
+
+            client.on('error', (err) => console.log('Redis Client Error', err));
+        
+            await client.connect();
+            let alreadyCached = await  client.get('users')
+            if ( alreadyCached) {
+                let cachedUserData = JSON.parse(alreadyCached);
+                return res.send(cachedUserData);
+            } else {
+                const results = await userRepository.findOne(req.params.id, {relations: ['projects']});
+                await client.setEx('users',3600, JSON.stringify(results));
+                return res.send(results);
+            }
+          
+        } catch(err) {
+            console.log("error connecting  to redis " + err);
+        }
       
-        await client.connect();
-      
-        const results = await userRepository.findOne(req.params.id, {relations: ['projects']});
-        return res.send(results);
+       
     });
 
     app.post("/users", async function(req: Request, res: Response) {
