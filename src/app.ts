@@ -101,7 +101,11 @@ createConnection().then(connection => {
 
 
     async function bulkUsers(client:any , id:string) {
-        const user = await userRepository.find({ id:LessThanOrEqual(190)});
+        let opts = {
+            id:LessThanOrEqual(190),
+            relations:['projects']
+        }
+        const user = await userRepository.find(opts);
         await client.setEx('bulkusers',3600, JSON.stringify(user));
         return user;
     }
@@ -114,7 +118,7 @@ createConnection().then(connection => {
             client.on('error', (err) => console.log('Redis Client Error', err));
         
             await client.connect();
-            let alreadyCachedData:any = await client.get('users');
+            let alreadyCachedData:any = await client.get('bulkusers');
             
             if ( alreadyCachedData ) {
                 alreadyCachedData = JSON.parse(alreadyCachedData);
