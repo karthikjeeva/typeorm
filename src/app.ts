@@ -20,7 +20,7 @@ createConnection().then(connection => {
         res.json(users);
     });
 
-   async function setCache(client:any , id:string) {
+   async function singleUser(client:any , id:string) {
     const user = await userRepository.findOne(id, {relations: ['projects']});
     await client.setEx('users',3600, JSON.stringify(user));
     return user;
@@ -38,11 +38,11 @@ createConnection().then(connection => {
             if ( alreadyCachedData ) {
                 alreadyCachedData = JSON.parse(alreadyCachedData);
                 if (alreadyCachedData.id != req.params.id) {
-                   return res.send(await setCache(client, req.params.id));
+                   return res.send(await singleUser(client, req.params.id));
                 }
                 return res.send(alreadyCachedData);
             } else {
-                return res.send(await setCache(client, req.params.id));
+                return res.send(await singleUser(client, req.params.id));
             }
 
            
@@ -100,7 +100,7 @@ createConnection().then(connection => {
     });
 
 
-    async function queryCache(client:any , id:string) {
+    async function bulkUsers(client:any , id:string) {
         const user = await userRepository.find({ id:LessThanOrEqual(190)});
         await client.setEx('bulkusers',3600, JSON.stringify(user));
         return user;
@@ -119,11 +119,11 @@ createConnection().then(connection => {
             if ( alreadyCachedData ) {
                 alreadyCachedData = JSON.parse(alreadyCachedData);
                 if (alreadyCachedData.id != req.params.id) {
-                   return res.send(await queryCache(client, req.params.id));
+                   return res.send(await bulkUsers(client, req.params.id));
                 }
                 return res.send(alreadyCachedData);
             } else {
-                return res.send(await queryCache(client, req.params.id));
+                return res.send(await bulkUsers(client, req.params.id));
             }
 
            
