@@ -119,9 +119,11 @@ createConnection().then(connection => {
         
             await client.connect();
             let alreadyCachedData:any = await client.get('bulkusers');
-            
             if ( alreadyCachedData ) {
                 alreadyCachedData = JSON.parse(alreadyCachedData);
+                const out = alreadyCachedData.map((o: { id: any; }) => o.id)
+                console.log(out)
+
                 if (alreadyCachedData.id != req.params.id) {
                    return res.send(await bulkUsers(client, req.params.id));
                 }
