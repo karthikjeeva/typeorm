@@ -1,6 +1,6 @@
 import * as express from "express";
 import {Request, Response} from "express";
-import {createConnection} from "typeorm";
+import {createConnection, LessThanOrEqual} from "typeorm";
 import {User} from "./entity/User";
 import {Project} from "./entity/Project";
 import * as redis from 'redis';
@@ -97,6 +97,42 @@ createConnection().then(connection => {
     app.delete("/users/:id", async function(req: Request, res: Response) {
         const results = await userRepository.delete(req.params.id);
         return res.send(results);
+    });
+
+
+    async function queryCache(client:any , id:string) {
+        const user = await userRepository.find({ id:LessThanOrEqual(190)});
+        await client.setEx('bulkusers',3600, JSON.stringify(user));
+        return user;
+    }
+
+
+    app.get("/customquery", async function(req: Request, res: Response) {
+        try {
+            const client = redis.createClient();
+
+            client.on('error', (err) => console.log('Redis Client Error', err));
+        
+            await client.connect();
+            let alreadyCachedData:any = await client.get('users');
+            
+            if ( alreadyCachedData ) {
+                alreadyCachedData = JSON.parse(alreadyCachedData);
+                if (alreadyCachedData.id != req.params.id) {
+                   return res.send(await queryCache(client, req.params.id));
+                }
+                return res.send(alreadyCachedData);
+            } else {
+                return res.send(await queryCache(client, req.params.id));
+            }
+
+           
+          
+        } catch(err) {
+            console.log("error connecting  to redis " + err);
+        }
+      
+       
     });
 
     // start express server
